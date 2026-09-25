@@ -42,6 +42,8 @@
     .kara-hdr-brand span:first-child{ font-size:15px !important; letter-spacing:.28em !important; }
     .kara-hdr-sub{ font-size:9px !important; letter-spacing:.2em !important; white-space:nowrap; }
     .kara-nav-explore{ display:none !important; }
+    .kara-nav{ gap:14px !important; }
+    .kara-nav-shop{ font-size:10px !important; letter-spacing:.2em !important; }
     .kara-nav-contact{ padding:9px 14px !important; font-size:10px !important; letter-spacing:.2em !important; white-space:nowrap; }
     .kara-journey-label{ display:none !important; }
     .kara-hud-labels{ font-size:9px !important; letter-spacing:.16em !important; }
@@ -54,8 +56,9 @@
   <!-- ============ FIXED CHROME ============ -->
   <header class="kara-hdr" style="position:fixed; top:0; left:0; right:0; z-index:60; display:flex; align-items:center; justify-content:space-between; padding:26px 40px; pointer-events:none; text-shadow:0 1px 3px rgba(0,0,0,.85), 0 0 14px rgba(0,0,0,.55);">
     <div class="kara-hdr-brand" style="display:flex; align-items:baseline; gap:12px;"><span style="font-family:'Playfair Display',serif; font-size:17px; letter-spacing:.34em; text-transform:uppercase; color:#F5EFE2;">KARA</span><span class="kara-hdr-sub" style="font-size:11px; letter-spacing:.3em; text-transform:uppercase; color:#F5EFE2; opacity:1;">Embroidery House</span></div>
-    <nav style="display:flex; align-items:center; gap:26px; pointer-events:auto;">
+    <nav class="kara-nav" style="display:flex; align-items:center; gap:26px; pointer-events:auto;">
       <a class="kara-nav-explore" href="#journey" onClick="{{ scrollToJourney }}" style="cursor:none; font-size:11px; letter-spacing:.28em; text-transform:uppercase; color:#F5EFE2; text-decoration:none; opacity:.85; transition:opacity .3s ease;" style-hover="opacity:1; text-decoration:underline; text-underline-offset:5px;">Explore the studio</a>
+      <a class="kara-nav-shop" href="shop.html" style="font-size:11px; font-weight:600; letter-spacing:.28em; text-transform:uppercase; color:#F5EFE2; text-decoration:none;">Shop</a>
       <a class="kara-nav-contact" href="https://wa.me/917835979899?text=Hello%20Kara%20Embroidery%20House%2C%20I%27d%20like%20to%20create%20a%20custom%20piece." target="_blank" rel="noopener" style="cursor:none; font-size:11px; font-weight:600; letter-spacing:.28em; text-transform:uppercase; color:#F5EFE2; text-decoration:none; padding:10px 20px; border:1px solid rgba(245,239,226,.9); box-shadow:0 0 10px rgba(0,0,0,.45), inset 0 0 10px rgba(0,0,0,.25); transition:background .3s ease;" style-hover="background:rgba(245,239,226,.14);">Contact</a>
     </nav>
   </header>
