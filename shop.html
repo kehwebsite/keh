@@ -46,8 +46,9 @@
   @media (min-width:760px){ .grid{ grid-template-columns:repeat(3,minmax(0,1fr)); } }
   @media (min-width:1100px){ .grid{ grid-template-columns:repeat(4,minmax(0,1fr)); } }
   .card{ display:flex; flex-direction:column; gap:10px; background:none; border:0; padding:0; text-align:left; }
-  .frame{ position:relative; aspect-ratio:4/5; overflow:hidden; background:var(--velvet-2); border:1px solid var(--line); }
-  .frame img{ position:relative; z-index:1; width:100%; height:100%; object-fit:cover; object-position:center 25%; }
+  .frame{ position:relative; aspect-ratio:2/3; overflow:hidden; background:var(--velvet-2); border:1px solid var(--line); }
+  .frame.bedding{ aspect-ratio:5/6; }
+  .frame img{ position:relative; z-index:1; width:100%; height:100%; object-fit:contain; object-position:center; }
   .ph{ position:absolute; inset:0; display:flex; align-items:center; justify-content:center; padding:14px; text-align:center;
        font-family:'Playfair Display',serif; font-style:italic; color:rgba(200,150,74,.55); font-size:15px;
        background:repeating-linear-gradient(135deg, rgba(200,150,74,.05) 0 2px, transparent 2px 12px); }
@@ -80,8 +81,9 @@
 
   .detail{ display:grid; gap:18px; }
   @media (min-width:900px){ .detail{ grid-template-columns:1fr 1fr; gap:28px; } }
-  .detail .frame{ max-height:56vh; aspect-ratio:auto; }
-  @media (min-width:900px){ .detail .frame{ aspect-ratio:4/5; max-height:none; } }
+  .detail .frame{ aspect-ratio:auto; }
+  .detail .frame img{ height:auto; max-height:72vh; max-height:72svh; }
+  @media (min-width:900px){ .detail .frame img{ max-height:78vh; } }
   .detail h3{ font-family:'Playfair Display',serif; font-weight:400; font-size:clamp(24px,3vw,32px); margin:0 0 10px; line-height:1.15; }
   .detail .prices{ font-size:16px; margin-bottom:6px; }
   .detail .now{ font-size:22px; }
@@ -106,7 +108,8 @@
   .wa{ background:var(--wa); color:#fff; border:0; padding:15px 22px; font-weight:600; font-size:15px; width:100%; display:flex; align-items:center; justify-content:center; gap:10px; }
 
   .line{ display:grid; grid-template-columns:64px 1fr auto; gap:12px; padding:14px 0; border-bottom:1px solid var(--line); align-items:center; }
-  .line .frame{ aspect-ratio:4/5; }
+  .line .frame, .line .frame.bedding{ aspect-ratio:4/5; }
+  .line .frame img{ object-fit:cover; object-position:center 20%; }
   .line .ph{ font-size:10px; padding:4px; }
   .line-name{ font-size:14px; line-height:1.35; margin-bottom:6px; }
   .line .qty button{ width:32px; height:32px; font-size:16px; }
@@ -270,7 +273,7 @@ Object.keys(cart).forEach(k => {
 const saveCart = () => { try { localStorage.setItem("kara-cart", JSON.stringify(cart)); } catch (e) {} };
 
 function frame(p, img = p.image, extra = "") {
-  return `<div class="frame">
+  return `<div class="frame ${esc(p.category)}">
     <div class="ph">${esc(p.name)}</div>
     <img src="${esc(img)}" alt="${esc(p.name)}" loading="lazy" decoding="async" onerror="this.remove()">
     ${p.bestseller ? '<span class="badge">Bestseller</span>' : ""}${extra}
