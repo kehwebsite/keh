@@ -86,6 +86,13 @@
   .detail .prices{ font-size:16px; margin-bottom:6px; }
   .detail .now{ font-size:22px; }
   .desc{ color:var(--muted); line-height:1.7; font-weight:300; margin:14px 0 18px; }
+  .swatch-label{ font-size:13px; color:var(--muted); margin:16px 0 8px; }
+  .swatch-label strong{ color:var(--cream); font-weight:500; }
+  .swatches{ display:flex; flex-wrap:wrap; gap:8px; }
+  .swatch{ background:none; border:1px solid var(--line); padding:9px 14px; border-radius:999px; font-size:13px; color:var(--muted); }
+  .swatch[aria-pressed="true"]{ border-color:var(--thread); color:var(--cream); background:rgba(200,150,74,.12); }
+  .desc ul{ margin:10px 0 0; padding-left:18px; }
+  .desc li{ margin:4px 0; }
   .qty{ display:inline-flex; align-items:center; border:1px solid var(--line); }
   .qty button{ background:none; border:0; width:40px; height:40px; font-size:18px; }
   .qty span{ min-width:34px; text-align:center; }
@@ -164,13 +171,28 @@
    - image:     photo path, e.g. "assets/shop/suit-07.jpg"
    - details:   one or two lines about the piece (optional)
    - bestseller: true to show a "Bestseller" tag (only when it's true!)
+   - colours:   OPTIONAL. For one design in several colours, list each
+                colour with its own photo instead of using image:
+                colours:[ { name:"Mustard", image:"assets/shop/suit-03.jpg" }, ... ]
+   - details:   can be several lines inside `backticks`. The first line
+                shows as an intro, every line after it as a bullet point.
    Any discount is worked out automatically from DISCOUNT below.
    ===================================================================== */
 const PRODUCTS = [
-  { id:"suit-01", category:"suits", name:"Rani pink printed suit with mirror work", price:3499, image:"assets/shop/suit-01.jpg", details:"", bestseller:false },  // DUMMY PRICE
-  { id:"suit-02", category:"suits", name:"Ivory floral printed suit", price:3299, image:"assets/shop/suit-02.jpg", details:"", bestseller:false },  // DUMMY PRICE
-  { id:"suit-03", category:"suits", name:"Mustard printed suit", price:3299, image:"assets/shop/suit-03.jpg", details:"", bestseller:false },  // DUMMY PRICE
-  { id:"suit-04", category:"suits", name:"Turquoise printed suit with mirror work", price:3499, image:"assets/shop/suit-04.jpg", details:"", bestseller:false },  // DUMMY PRICE
+  { id:"gajji-print", category:"suits", name:"Gajji silk printed suit", price:2599,
+    colours:[
+      { name:"Rani pink", image:"assets/shop/suit-01.jpg" },
+      { name:"Ivory",     image:"assets/shop/suit-02.jpg" },
+      { name:"Mustard",   image:"assets/shop/suit-03.jpg" },
+      { name:"Turquoise", image:"assets/shop/suit-04.jpg" },
+    ],
+    details:`A beautiful blend of vibrant colours and traditional elegance.
+Gajji silk position print shirt – 2.5 m
+Opara silk bottom – 2.5 m
+Chiffon dupatta with lace – 2.5 m
+Elegant mirror work and cut dana work
+Perfect for festive occasions, parties and weddings`,
+    bestseller:false },
   { id:"suit-05", category:"suits", name:"Mustard woven suit with embellished neckline", price:4499, image:"assets/shop/suit-05.jpg", details:"", bestseller:false },  // DUMMY PRICE
   { id:"suit-06", category:"suits", name:"Pink leheriya suit", price:2999, image:"assets/shop/suit-06.jpg", details:"", bestseller:false },  // DUMMY PRICE
   { id:"suit-07", category:"suits", name:"Rust embroidered tissue suit", price:5499, image:"assets/shop/suit-07.jpg", details:"", bestseller:false },  // DUMMY PRICE
@@ -214,18 +236,26 @@ const WHATSAPP = "917835979899";     // country code + number, no + or spaces
 const $ = (s) => document.querySelector(s);
 const inr = (n) => "₹" + Math.round(n).toLocaleString("en-IN");
 const salePrice = (p) => Math.round(p.price * (100 - DISCOUNT) / 100);
+PRODUCTS.forEach(p => { if (p.colours && p.colours.length && !p.image) p.image = p.colours[0].image; });
 const byId = Object.fromEntries(PRODUCTS.map(p => [p.id, p]));
+const splitKey = (k) => { const i = k.indexOf("|"); return i < 0 ? [k, ""] : [k.slice(0, i), k.slice(i + 1)]; };
+const colourOf = (p, name) => (p.colours || []).find(c => c.name === name);
+const lineImage = (p, colour) => (colourOf(p, colour) || {}).image || p.image;
+const lineName = (p, colour) => colour ? `${p.name} – ${colour}` : p.name;
 const esc = (t) => String(t).replace(/[&<>"']/g, c => ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[c]));
 
 let cart = {};
 try { cart = JSON.parse(localStorage.getItem("kara-cart") || "{}") || {}; } catch (e) { cart = {}; }
-Object.keys(cart).forEach(id => { if (!byId[id]) delete cart[id]; });
+Object.keys(cart).forEach(k => {
+  const [id, colour] = splitKey(k), p = byId[id];
+  if (!p || (p.colours ? !colourOf(p, colour) : colour)) delete cart[k];
+});
 const saveCart = () => { try { localStorage.setItem("kara-cart", JSON.stringify(cart)); } catch (e) {} };
 
-function frame(p, extra = "") {
+function frame(p, img = p.image, extra = "") {
   return `<div class="frame">
     <div class="ph">${esc(p.name)}</div>
-    <img src="${esc(p.image)}" alt="${esc(p.name)}" loading="lazy" decoding="async" onerror="this.remove()">
+    <img src="${esc(img)}" alt="${esc(p.name)}" loading="lazy" decoding="async" onerror="this.remove()">
     ${p.bestseller ? '<span class="badge">Bestseller</span>' : ""}${extra}
   </div>`;
 }
@@ -247,7 +277,7 @@ function renderGrid() {
       ${frame(p)}
       <div class="name">${esc(p.name)}</div>
       ${priceHTML(p)}
-      <div class="ship">${SHIPS}</div>
+      <div class="ship">${p.colours ? `${p.colours.length} colours · ` : ""}${SHIPS}</div>
     </button>`).join("") : `<p class="empty">New pieces are coming to this section soon.</p>`;
 }
 $("#tabs").addEventListener("click", (e) => {
@@ -273,20 +303,30 @@ $("#scrim").addEventListener("click", closePanels);
 document.addEventListener("click", (e) => { if (e.target.closest("[data-close]")) closePanels(); });
 document.addEventListener("keydown", (e) => { if (e.key === "Escape") closePanels(); });
 
+function detailsHTML(t) {
+  const lines = String(t || "").split("\n").map(l => l.trim()).filter(Boolean);
+  if (!lines.length) return "";
+  const rest = lines.slice(1);
+  return `<div class="desc"><div>${esc(lines[0])}</div>${rest.length ? `<ul>${rest.map(l => `<li>${esc(l)}</li>`).join("")}</ul>` : ""}</div>`;
+}
+
 /* product sheet */
-let sheetQty = 1, sheetId = null;
+let sheetQty = 1, sheetId = null, sheetColour = "";
 function openProduct(id) {
   const p = byId[id]; if (!p) return;
-  sheetId = id; sheetQty = 1;
+  sheetId = id; sheetQty = 1; sheetColour = p.colours ? p.colours[0].name : "";
   $("#sheetTitle").textContent = CATEGORIES.find(c => c.key === p.category)?.label || "Product";
   $("#sheetBody").innerHTML = `
     <div class="detail">
-      ${frame(p)}
+      <div id="sheetFrame">${frame(p, lineImage(p, sheetColour))}</div>
       <div>
         <h3>${esc(p.name)}</h3>
         ${priceHTML(p)}
         <div class="ship">${SHIPS}</div>
-        ${p.details ? `<p class="desc">${esc(p.details)}</p>` : ""}
+        ${p.colours ? `<div class="swatch-label">Colour: <strong id="colourName">${esc(sheetColour)}</strong></div>
+        <div class="swatches" role="group" aria-label="Colour">${p.colours.map(c =>
+          `<button class="swatch" data-colour="${esc(c.name)}" aria-pressed="${c.name === sheetColour}">${esc(c.name)}</button>`).join("")}</div>` : ""}
+        ${detailsHTML(p.details)}
         <div class="row">
           <div class="qty" aria-label="Quantity">
             <button data-sq="-1" aria-label="Less">−</button><span id="sq">1</span><button data-sq="1" aria-label="More">+</button>
@@ -299,10 +339,19 @@ function openProduct(id) {
 }
 $("#grid").addEventListener("click", (e) => { const c = e.target.closest("[data-open]"); if (c) openProduct(c.dataset.open); });
 $("#sheetBody").addEventListener("click", (e) => {
+  const sw = e.target.closest("[data-colour]");
+  if (sw) {
+    const p = byId[sheetId]; sheetColour = sw.dataset.colour;
+    document.querySelectorAll("#sheetBody .swatch").forEach(b => b.setAttribute("aria-pressed", String(b === sw)));
+    $("#colourName").textContent = sheetColour;
+    $("#sheetFrame").innerHTML = frame(p, lineImage(p, sheetColour));
+    return;
+  }
   const q = e.target.closest("[data-sq]");
   if (q) { sheetQty = Math.max(1, Math.min(20, sheetQty + Number(q.dataset.sq))); $("#sq").textContent = sheetQty; return; }
   if (e.target.id === "addBtn") {
-    cart[sheetId] = Math.min(20, (cart[sheetId] || 0) + sheetQty);
+    const key = sheetColour ? `${sheetId}|${sheetColour}` : sheetId;
+    cart[key] = Math.min(20, (cart[key] || 0) + sheetQty);
     saveCart(); renderCart(); closePanels();
     toast("Added to cart");
   }
@@ -320,12 +369,12 @@ function renderCart() {
   }
   let total = 0, full = 0;
   $("#cartBody").innerHTML = ids.map(id => {
-    const p = byId[id], q = cart[id];
+    const [pid, colour] = splitKey(id), p = byId[pid], q = cart[id];
     total += salePrice(p) * q; full += p.price * q;
     return `<div class="line">
-      ${frame(p)}
+      ${frame(p, lineImage(p, colour))}
       <div>
-        <div class="line-name">${esc(p.name)}</div>
+        <div class="line-name">${esc(lineName(p, colour))}</div>
         <div class="qty"><button data-cq="-1" data-id="${esc(id)}" aria-label="Less">−</button><span>${q}</span><button data-cq="1" data-id="${esc(id)}" aria-label="More">+</button></div>
         <div><button class="remove" data-rm="${esc(id)}">Remove</button></div>
       </div>
@@ -352,8 +401,8 @@ $("#cartTotals").addEventListener("click", (e) => {
   if (!e.target.closest("#orderWa")) return;
   let total = 0;
   const lines = Object.keys(cart).map((id, i) => {
-    const p = byId[id], q = cart[id], t = salePrice(p) * q; total += t;
-    return `${i + 1}. ${p.name} (${p.id}) x ${q} = ${inr(t)}`;
+    const [pid, colour] = splitKey(id), p = byId[pid], q = cart[id], t = salePrice(p) * q; total += t;
+    return `${i + 1}. ${lineName(p, colour)} (${p.id}) x ${q} = ${inr(t)}`;
   });
   const msg = `Hello Kara Embroidery House, I'd like to order:\n\n${lines.join("\n")}\n\nTotal: ${inr(total)}${DISCOUNT > 0 ? ` (after ${DISCOUNT}% off)` : ""}\n\nName:\nDelivery address:\nPin code:`;
   window.open(`https://wa.me/${WHATSAPP}?text=${encodeURIComponent(msg)}`, "_blank", "noopener");
