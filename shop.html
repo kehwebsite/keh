@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Shop | Kara Embroidery House</title>
+<meta name="description" content="Shop bed cover sets, comforter sets and suits from Kara Embroidery House, Faridabad. Order on WhatsApp.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;1,400&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --velvet:#0D0A07; --velvet-2:#16110C; --thread:#C8964A; --thread-soft:#E8C98A;
+    --cream:#F5EFE2; --muted:rgba(245,239,226,.62); --line:rgba(139,115,85,.28); --wa:#1FA855;
+  }
+  *{ box-sizing:border-box; }
+  html,body{ margin:0; background:var(--velvet); color:var(--cream); font-family:Inter,system-ui,sans-serif; }
+  a{ color:inherit; }
+  button{ font:inherit; color:inherit; cursor:pointer; }
+  :focus-visible{ outline:2px solid var(--thread); outline-offset:3px; }
+  img{ display:block; max-width:100%; }
+
+  /* header */
+  .top{ position:sticky; top:0; z-index:20; display:flex; align-items:center; justify-content:space-between; gap:12px;
+        padding:14px clamp(16px,4vw,48px); background:rgba(13,10,7,.94); border-bottom:1px solid var(--line); }
+  .brand{ text-decoration:none; font-family:'Playfair Display',serif; font-size:18px; letter-spacing:.3em; white-space:nowrap; }
+  .top-actions{ display:flex; align-items:center; gap:10px; }
+  .home-link{ font-size:13px; color:var(--muted); text-decoration:none; padding:8px 4px; }
+  .cart-btn{ display:flex; align-items:center; gap:8px; background:none; border:1px solid rgba(245,239,226,.55); padding:9px 14px; font-size:13px; }
+  .cart-count{ min-width:20px; height:20px; padding:0 6px; border-radius:10px; background:var(--thread); color:var(--velvet); font-size:12px; font-weight:600; display:inline-flex; align-items:center; justify-content:center; }
+
+  /* intro */
+  .intro{ padding:clamp(40px,8vw,90px) clamp(16px,4vw,48px) 24px; max-width:1200px; margin:0 auto; }
+  .intro h1{ font-family:'Playfair Display',serif; font-weight:400; font-size:clamp(34px,6vw,64px); line-height:1.05; margin:0 0 14px; }
+  .intro p{ margin:0; max-width:52ch; color:var(--muted); line-height:1.7; font-weight:300; }
+
+  /* category tabs */
+  .tabs{ display:flex; gap:8px; overflow-x:auto; padding:8px clamp(16px,4vw,48px) 4px; max-width:1200px; margin:0 auto; scrollbar-width:none; }
+  .tabs::-webkit-scrollbar{ display:none; }
+  .tab{ flex:0 0 auto; background:none; border:1px solid var(--line); padding:10px 16px; font-size:14px; color:var(--muted); border-radius:999px; }
+  .tab[aria-pressed="true"]{ border-color:var(--thread); color:var(--cream); background:rgba(200,150,74,.12); }
+
+  /* grid */
+  .grid{ display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:clamp(14px,2.4vw,28px);
+         padding:24px clamp(16px,4vw,48px) 80px; max-width:1200px; margin:0 auto; }
+  @media (min-width:760px){ .grid{ grid-template-columns:repeat(3,minmax(0,1fr)); } }
+  @media (min-width:1100px){ .grid{ grid-template-columns:repeat(4,minmax(0,1fr)); } }
+  .card{ display:flex; flex-direction:column; gap:10px; background:none; border:0; padding:0; text-align:left; }
+  .frame{ position:relative; aspect-ratio:4/5; overflow:hidden; background:var(--velvet-2); border:1px solid var(--line); }
+  .frame img{ width:100%; height:100%; object-fit:cover; object-position:center 25%; }
+  .ph{ position:absolute; inset:0; display:flex; align-items:center; justify-content:center; padding:14px; text-align:center;
+       font-family:'Playfair Display',serif; font-style:italic; color:rgba(200,150,74,.55); font-size:15px;
+       background:repeating-linear-gradient(135deg, rgba(200,150,74,.05) 0 2px, transparent 2px 12px); }
+  .badge{ position:absolute; top:10px; left:10px; background:var(--cream); color:var(--velvet); font-size:11px; font-weight:600; padding:4px 8px; }
+  .name{ font-family:'Playfair Display',serif; font-size:clamp(15px,1.6vw,18px); line-height:1.3; }
+  .prices{ display:flex; flex-wrap:wrap; align-items:baseline; gap:4px 8px; font-size:14px; }
+  .now{ color:var(--thread-soft); font-weight:600; font-size:15px; }
+  .was{ color:var(--muted); text-decoration:line-through; }
+  .off{ color:var(--thread); font-size:12px; font-weight:500; }
+  .ship{ font-size:12px; color:var(--muted); }
+  .empty{ grid-column:1/-1; color:var(--muted); padding:40px 0; text-align:center; }
+
+  /* overlay panels (product sheet + cart) */
+  .scrim{ position:fixed; inset:0; background:rgba(0,0,0,.6); z-index:40; opacity:0; pointer-events:none; transition:opacity .25s; }
+  .scrim.on{ opacity:1; pointer-events:auto; }
+  .panel{ position:fixed; z-index:50; background:var(--velvet); border:1px solid var(--line); display:flex; flex-direction:column;
+          transition:transform .3s ease; }
+  .sheet{ left:0; right:0; bottom:0; max-height:92vh; max-height:92svh; transform:translateY(105%); border-bottom:0; }
+  @media (min-width:900px){ .sheet{ left:50%; right:auto; bottom:auto; top:50%; width:min(880px,92vw); transform:translate(-50%,-40%) scale(.98); opacity:0; pointer-events:none; transition:transform .25s ease, opacity .25s ease; } }
+  .sheet.on{ transform:translateY(0); }
+  @media (min-width:900px){ .sheet.on{ transform:translate(-50%,-50%); opacity:1; pointer-events:auto; } }
+  .drawer{ top:0; right:0; bottom:0; width:min(420px,100vw); transform:translateX(105%); border-right:0; }
+  .drawer.on{ transform:translateX(0); }
+  @media (prefers-reduced-motion:reduce){ .panel,.scrim{ transition:none; } }
+
+  .panel-head{ display:flex; align-items:center; justify-content:space-between; padding:16px 18px; border-bottom:1px solid var(--line); }
+  .panel-head h2{ margin:0; font-family:'Playfair Display',serif; font-weight:400; font-size:20px; }
+  .x{ background:none; border:0; font-size:26px; line-height:1; padding:4px 8px; color:var(--muted); }
+  .panel-body{ overflow-y:auto; padding:18px; }
+
+  .detail{ display:grid; gap:18px; }
+  @media (min-width:900px){ .detail{ grid-template-columns:1fr 1fr; gap:28px; } }
+  .detail .frame{ max-height:56vh; aspect-ratio:auto; }
+  @media (min-width:900px){ .detail .frame{ aspect-ratio:4/5; max-height:none; } }
+  .detail h3{ font-family:'Playfair Display',serif; font-weight:400; font-size:clamp(24px,3vw,32px); margin:0 0 10px; line-height:1.15; }
+  .detail .prices{ font-size:16px; margin-bottom:6px; }
+  .detail .now{ font-size:22px; }
+  .desc{ color:var(--muted); line-height:1.7; font-weight:300; margin:14px 0 18px; }
+  .qty{ display:inline-flex; align-items:center; border:1px solid var(--line); }
+  .qty button{ background:none; border:0; width:40px; height:40px; font-size:18px; }
+  .qty span{ min-width:34px; text-align:center; }
+  .row{ display:flex; flex-wrap:wrap; gap:12px; align-items:center; margin-top:16px; }
+  .primary{ background:var(--thread); color:var(--velvet); border:0; padding:14px 22px; font-weight:600; font-size:14px; flex:1 1 180px; }
+  .primary:disabled{ opacity:.45; cursor:not-allowed; }
+  .wa{ background:var(--wa); color:#fff; border:0; padding:15px 22px; font-weight:600; font-size:15px; width:100%; display:flex; align-items:center; justify-content:center; gap:10px; }
+
+  .line{ display:grid; grid-template-columns:64px 1fr auto; gap:12px; padding:14px 0; border-bottom:1px solid var(--line); align-items:center; }
+  .line .frame{ aspect-ratio:4/5; }
+  .line .ph{ font-size:10px; padding:4px; }
+  .line-name{ font-size:14px; line-height:1.35; margin-bottom:6px; }
+  .line .qty button{ width:32px; height:32px; font-size:16px; }
+  .line-price{ text-align:right; font-size:14px; }
+  .remove{ background:none; border:0; color:var(--muted); font-size:12px; text-decoration:underline; padding:6px 0 0; }
+  .totals{ padding:16px 18px calc(16px + env(safe-area-inset-bottom)); border-top:1px solid var(--line); display:grid; gap:12px; }
+  .total-row{ display:flex; justify-content:space-between; font-size:16px; }
+  .saved{ font-size:13px; color:var(--thread-soft); }
+  .note{ font-size:12px; color:var(--muted); line-height:1.5; margin:0; }
+
+  .toast{ position:fixed; left:50%; bottom:24px; transform:translate(-50%,20px); background:var(--cream); color:var(--velvet); padding:12px 18px; font-size:14px; z-index:60; opacity:0; transition:all .25s; pointer-events:none; }
+  .toast.on{ opacity:1; transform:translate(-50%,0); }
+
+  .foot{ border-top:1px solid var(--line); padding:32px clamp(16px,4vw,48px); text-align:center; color:var(--muted); font-size:13px; line-height:1.9; }
+  .foot em{ font-family:'Playfair Display',serif; color:var(--thread-soft); font-size:15px; }
+</style>
+</head>
+<body>
+
+<header class="top">
+  <a class="brand" href="index.html">KARA</a>
+  <div class="top-actions">
+    <a class="home-link" href="index.html">Home</a>
+    <button class="cart-btn" id="openCart" aria-label="Open cart">Cart <span class="cart-count" id="cartCount">0</span></button>
+  </div>
+</header>
+
+<section class="intro">
+  <h1>Shop</h1>
+  <p>Ready pieces from our studio in Faridabad.</p>
+</section>
+
+<nav class="tabs" id="tabs" aria-label="Categories"></nav>
+<main class="grid" id="grid"></main>
+
+<footer class="foot">
+  <em>Customise. Don't Compromise.</em><br>
+  SCO 230, Omaxe World Street, Sector 79, Faridabad, Haryana 121004<br>
+  <a href="https://wa.me/917835979899" target="_blank" rel="noopener">WhatsApp +91 78359 79899</a>
+</footer>
+
+<div class="scrim" id="scrim"></div>
+
+<section class="panel sheet" id="sheet" role="dialog" aria-modal="true" aria-labelledby="sheetTitle">
+  <div class="panel-head"><h2 id="sheetTitle">Product</h2><button class="x" data-close aria-label="Close">×</button></div>
+  <div class="panel-body" id="sheetBody"></div>
+</section>
+
+<aside class="panel drawer" id="drawer" role="dialog" aria-modal="true" aria-labelledby="cartTitle">
+  <div class="panel-head"><h2 id="cartTitle">Your cart</h2><button class="x" data-close aria-label="Close">×</button></div>
+  <div class="panel-body" id="cartBody"></div>
+  <div class="totals" id="cartTotals"></div>
+</aside>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+/* =====================================================================
+   EDIT YOUR PRODUCTS HERE
+   ---------------------------------------------------------------------
+   One block per product. Copy a block to add a new one.
+   - id:        short unique code, no spaces (e.g. "suit-07")
+   - category:  "bedding" or "suits"
+   - name:      what customers see
+   - price:     the REAL full price in rupees, numbers only (no commas)
+   - image:     photo path, e.g. "assets/shop/suit-07.jpg"
+   - details:   one or two lines about the piece (optional)
+   - bestseller: true to show a "Bestseller" tag (only when it's true!)
+   Any discount is worked out automatically from DISCOUNT below.
+   ===================================================================== */
+const PRODUCTS = [
+  { id:"suit-01", category:"suits", name:"Rani pink printed suit with mirror work", price:3499, image:"assets/shop/suit-01.jpg", details:"", bestseller:false },  // DUMMY PRICE
+  { id:"suit-02", category:"suits", name:"Ivory floral printed suit", price:3299, image:"assets/shop/suit-02.jpg", details:"", bestseller:false },  // DUMMY PRICE
+  { id:"suit-03", category:"suits", name:"Mustard printed suit", price:3299, image:"assets/shop/suit-03.jpg", details:"", bestseller:false },  // DUMMY PRICE
+  { id:"suit-04", category:"suits", name:"Turquoise printed suit with mirror work", price:3499, image:"assets/shop/suit-04.jpg", details:"", bestseller:false },  // DUMMY PRICE
+  { id:"suit-05", category:"suits", name:"Mustard woven suit with embellished neckline", price:4499, image:"assets/shop/suit-05.jpg", details:"", bestseller:false },  // DUMMY PRICE
+  { id:"suit-06", category:"suits", name:"Pink leheriya suit", price:2999, image:"assets/shop/suit-06.jpg", details:"", bestseller:false },  // DUMMY PRICE
+  { id:"suit-07", category:"suits", name:"Rust embroidered tissue suit", price:5499, image:"assets/shop/suit-07.jpg", details:"", bestseller:false },  // DUMMY PRICE
+  { id:"suit-08", category:"suits", name:"Rani pink embroidered suit with cutwork dupatta", price:5299, image:"assets/shop/suit-08.jpg", details:"", bestseller:false },  // DUMMY PRICE
+  { id:"suit-09", category:"suits", name:"Magenta embroidered suit", price:4999, image:"assets/shop/suit-09.jpg", details:"", bestseller:false },  // DUMMY PRICE
+  { id:"suit-10", category:"suits", name:"Mustard embroidered suit with cutwork dupatta", price:5299, image:"assets/shop/suit-10.jpg", details:"", bestseller:false },  // DUMMY PRICE
+  { id:"suit-11", category:"suits", name:"Lavender embroidered suit", price:5499, image:"assets/shop/suit-11.jpg", details:"", bestseller:false },  // DUMMY PRICE
+  { id:"suit-12", category:"suits", name:"Sage green embroidered suit", price:5499, image:"assets/shop/suit-12.jpg", details:"", bestseller:false },  // DUMMY PRICE
+  { id:"suit-13", category:"suits", name:"Powder blue embroidered suit", price:5499, image:"assets/shop/suit-13.jpg", details:"", bestseller:false },  // DUMMY PRICE
+  { id:"suit-14", category:"suits", name:"Teal floral embroidered suit", price:4799, image:"assets/shop/suit-14.jpg", details:"", bestseller:false },  // DUMMY PRICE
+  { id:"suit-15", category:"suits", name:"Dusty rose floral embroidered suit", price:4799, image:"assets/shop/suit-15.jpg", details:"", bestseller:false },  // DUMMY PRICE
+  { id:"suit-16", category:"suits", name:"Purple embroidered suit with potli", price:5999, image:"assets/shop/suit-16.jpg", details:"", bestseller:false },  // DUMMY PRICE
+  { id:"suit-17", category:"suits", name:"Red embroidered suit with potli", price:5999, image:"assets/shop/suit-17.jpg", details:"", bestseller:false },  // DUMMY PRICE
+  { id:"suit-18", category:"suits", name:"Olive gold mirror-work suit", price:5799, image:"assets/shop/suit-18.jpg", details:"", bestseller:false },  // DUMMY PRICE
+  { id:"suit-19", category:"suits", name:"Beige mirror-work suit with green dupatta", price:5299, image:"assets/shop/suit-19.jpg", details:"", bestseller:false },  // DUMMY PRICE
+  { id:"suit-20", category:"suits", name:"Dusty pink gota suit with mustard dupatta", price:5499, image:"assets/shop/suit-20.jpg", details:"", bestseller:false },  // DUMMY PRICE
+  { id:"suit-21", category:"suits", name:"Multicolour patchwork printed suit", price:3499, image:"assets/shop/suit-21.jpg", details:"", bestseller:false },  // DUMMY PRICE
+  { id:"bed-01", category:"bedding", name:"Grey quilted bedcover set with charcoal motifs", price:4999, image:"assets/shop/bed-01.jpg", details:"", bestseller:false },  // DUMMY PRICE
+  { id:"bed-02", category:"bedding", name:"Sage green floral comforter set", price:5999, image:"assets/shop/bed-02.jpg", details:"", bestseller:false },  // DUMMY PRICE
+  { id:"bed-03", category:"bedding", name:"Mauve grey embroidered quilted bedcover set", price:5499, image:"assets/shop/bed-03.jpg", details:"", bestseller:false },  // DUMMY PRICE
+  { id:"bed-04", category:"bedding", name:"Maroon floral comforter set", price:5999, image:"assets/shop/bed-04.jpg", details:"", bestseller:false },  // DUMMY PRICE
+  { id:"bed-05", category:"bedding", name:"Lavender floral comforter set", price:5999, image:"assets/shop/bed-05.jpg", details:"", bestseller:false },  // DUMMY PRICE
+  { id:"bed-06", category:"bedding", name:"Chocolate brown floral comforter set", price:5999, image:"assets/shop/bed-06.jpg", details:"", bestseller:false },  // DUMMY PRICE
+  { id:"bed-07", category:"bedding", name:"Ivory and gold embroidered quilted bedcover set", price:5499, image:"assets/shop/bed-07.jpg", details:"", bestseller:false },  // DUMMY PRICE
+  { id:"bed-08", category:"bedding", name:"Cream bedcover set with gold motifs", price:4999, image:"assets/shop/bed-08.jpg", details:"", bestseller:false },  // DUMMY PRICE
+  { id:"bed-09", category:"bedding", name:"White bedcover set with blush motifs", price:4999, image:"assets/shop/bed-09.jpg", details:"", bestseller:false },  // DUMMY PRICE
+  { id:"bed-10", category:"bedding", name:"Ice blue embroidered quilted bedcover set", price:5499, image:"assets/shop/bed-10.jpg", details:"", bestseller:false },  // DUMMY PRICE
+];
+
+const CATEGORIES = [
+  { key:"all",     label:"All" },
+  { key:"bedding", label:"Bed cover & comforter sets" },
+  { key:"suits",   label:"Suits" },
+];
+
+const DISCOUNT = 0;                  // % off for every product. 0 = no discount shown. Change to 10 or 15 later.
+const SHIPS = "Usually ships in 24 hours";
+const WHATSAPP = "917835979899";     // country code + number, no + or spaces
+/* ===================== nothing below needs editing ===================== */
+
+const $ = (s) => document.querySelector(s);
+const inr = (n) => "₹" + Math.round(n).toLocaleString("en-IN");
+const salePrice = (p) => Math.round(p.price * (100 - DISCOUNT) / 100);
+const byId = Object.fromEntries(PRODUCTS.map(p => [p.id, p]));
+const esc = (t) => String(t).replace(/[&<>"']/g, c => ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[c]));
+
+let cart = {};
+try { cart = JSON.parse(localStorage.getItem("kara-cart") || "{}") || {}; } catch (e) { cart = {}; }
+Object.keys(cart).forEach(id => { if (!byId[id]) delete cart[id]; });
+const saveCart = () => { try { localStorage.setItem("kara-cart", JSON.stringify(cart)); } catch (e) {} };
+
+function frame(p, extra = "") {
+  return `<div class="frame">
+    <div class="ph">${esc(p.name)}</div>
+    <img src="${esc(p.image)}" alt="${esc(p.name)}" loading="lazy" decoding="async" onerror="this.remove()">
+    ${p.bestseller ? '<span class="badge">Bestseller</span>' : ""}${extra}
+  </div>`;
+}
+function priceHTML(p) {
+  if (DISCOUNT <= 0) return `<div class="prices"><span class="now">${inr(p.price)}</span></div>`;
+  return `<div class="prices"><span class="now">${inr(salePrice(p))}</span><span class="was">${inr(p.price)}</span><span class="off">${DISCOUNT}% off</span></div>`;
+}
+
+/* tabs + grid */
+let active = "all";
+function renderTabs() {
+  $("#tabs").innerHTML = CATEGORIES.map(c =>
+    `<button class="tab" aria-pressed="${c.key === active}" data-cat="${c.key}">${esc(c.label)}</button>`).join("");
+}
+function renderGrid() {
+  const list = PRODUCTS.filter(p => active === "all" || p.category === active);
+  $("#grid").innerHTML = list.length ? list.map(p => `
+    <button class="card" data-open="${esc(p.id)}" aria-label="${esc(p.name)}, ${inr(salePrice(p))}">
+      ${frame(p)}
+      <div class="name">${esc(p.name)}</div>
+      ${priceHTML(p)}
+      <div class="ship">${SHIPS}</div>
+    </button>`).join("") : `<p class="empty">New pieces are coming to this section soon.</p>`;
+}
+$("#tabs").addEventListener("click", (e) => {
+  const b = e.target.closest("[data-cat]"); if (!b) return;
+  active = b.dataset.cat; renderTabs(); renderGrid();
+});
+
+/* panels */
+let lastFocus = null;
+function openPanel(el) {
+  lastFocus = document.activeElement;
+  $("#scrim").classList.add("on"); el.classList.add("on");
+  document.body.style.overflow = "hidden";
+  setTimeout(() => el.querySelector("[data-close]").focus(), 60);
+}
+function closePanels() {
+  $("#scrim").classList.remove("on");
+  document.querySelectorAll(".panel.on").forEach(p => p.classList.remove("on"));
+  document.body.style.overflow = "";
+  if (lastFocus) lastFocus.focus();
+}
+$("#scrim").addEventListener("click", closePanels);
+document.addEventListener("click", (e) => { if (e.target.closest("[data-close]")) closePanels(); });
+document.addEventListener("keydown", (e) => { if (e.key === "Escape") closePanels(); });
+
+/* product sheet */
+let sheetQty = 1, sheetId = null;
+function openProduct(id) {
+  const p = byId[id]; if (!p) return;
+  sheetId = id; sheetQty = 1;
+  $("#sheetTitle").textContent = CATEGORIES.find(c => c.key === p.category)?.label || "Product";
+  $("#sheetBody").innerHTML = `
+    <div class="detail">
+      ${frame(p)}
+      <div>
+        <h3>${esc(p.name)}</h3>
+        ${priceHTML(p)}
+        <div class="ship">${SHIPS}</div>
+        ${p.details ? `<p class="desc">${esc(p.details)}</p>` : ""}
+        <div class="row">
+          <div class="qty" aria-label="Quantity">
+            <button data-sq="-1" aria-label="Less">−</button><span id="sq">1</span><button data-sq="1" aria-label="More">+</button>
+          </div>
+          <button class="primary" id="addBtn">Add to cart</button>
+        </div>
+      </div>
+    </div>`;
+  openPanel($("#sheet"));
+}
+$("#grid").addEventListener("click", (e) => { const c = e.target.closest("[data-open]"); if (c) openProduct(c.dataset.open); });
+$("#sheetBody").addEventListener("click", (e) => {
+  const q = e.target.closest("[data-sq]");
+  if (q) { sheetQty = Math.max(1, Math.min(20, sheetQty + Number(q.dataset.sq))); $("#sq").textContent = sheetQty; return; }
+  if (e.target.id === "addBtn") {
+    cart[sheetId] = Math.min(20, (cart[sheetId] || 0) + sheetQty);
+    saveCart(); renderCart(); closePanels();
+    toast("Added to cart");
+  }
+});
+
+/* cart */
+function renderCart() {
+  const ids = Object.keys(cart);
+  const count = ids.reduce((s, id) => s + cart[id], 0);
+  $("#cartCount").textContent = count;
+  if (!ids.length) {
+    $("#cartBody").innerHTML = `<p class="note" style="font-size:14px">Your cart is empty. Tap any product to add it here.</p>`;
+    $("#cartTotals").innerHTML = "";
+    return;
+  }
+  let total = 0, full = 0;
+  $("#cartBody").innerHTML = ids.map(id => {
+    const p = byId[id], q = cart[id];
+    total += salePrice(p) * q; full += p.price * q;
+    return `<div class="line">
+      ${frame(p)}
+      <div>
+        <div class="line-name">${esc(p.name)}</div>
+        <div class="qty"><button data-cq="-1" data-id="${esc(id)}" aria-label="Less">−</button><span>${q}</span><button data-cq="1" data-id="${esc(id)}" aria-label="More">+</button></div>
+        <div><button class="remove" data-rm="${esc(id)}">Remove</button></div>
+      </div>
+      <div class="line-price"><div class="now">${inr(salePrice(p) * q)}</div>${DISCOUNT > 0 ? `<div class="was">${inr(p.price * q)}</div>` : ""}</div>
+    </div>`;
+  }).join("");
+  $("#cartTotals").innerHTML = `
+    <div class="total-row"><span>Total</span><strong>${inr(total)}</strong></div>
+    ${DISCOUNT > 0 ? `<div class="saved">You save ${inr(full - total)} (${DISCOUNT}% off)</div>` : ""}
+    <button class="wa" id="orderWa">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2zm0 18.2a8.2 8.2 0 0 1-4.2-1.2l-.3-.2-3 .8.8-2.9-.2-.3A8.2 8.2 0 1 1 12 20.2zm4.5-6.1c-.2-.1-1.5-.7-1.7-.8-.2-.1-.4-.1-.6.1l-.8 1c-.1.2-.3.2-.5.1a6.7 6.7 0 0 1-3.3-2.9c-.2-.4.2-.4.7-1.3.1-.2 0-.3 0-.4l-.8-1.8c-.2-.5-.4-.4-.6-.4h-.5a1 1 0 0 0-.7.3 3 3 0 0 0-.9 2.2 5.2 5.2 0 0 0 1.1 2.8 11.9 11.9 0 0 0 4.6 4c1.7.7 2.4.8 3.2.7.5-.1 1.5-.6 1.7-1.2.2-.6.2-1.1.2-1.2-.1-.1-.3-.2-.5-.3z"/></svg>
+      Order on WhatsApp
+    </button>
+    <p class="note">This opens WhatsApp with your order filled in. Just press send. We'll confirm availability, delivery and payment with you there.</p>`;
+}
+$("#cartBody").addEventListener("click", (e) => {
+  const q = e.target.closest("[data-cq]"), r = e.target.closest("[data-rm]");
+  if (q) { const id = q.dataset.id; cart[id] = (cart[id] || 0) + Number(q.dataset.cq); if (cart[id] <= 0) delete cart[id]; else cart[id] = Math.min(20, cart[id]); }
+  else if (r) { delete cart[r.dataset.rm]; }
+  else return;
+  saveCart(); renderCart();
+});
+$("#cartTotals").addEventListener("click", (e) => {
+  if (!e.target.closest("#orderWa")) return;
+  let total = 0;
+  const lines = Object.keys(cart).map((id, i) => {
+    const p = byId[id], q = cart[id], t = salePrice(p) * q; total += t;
+    return `${i + 1}. ${p.name} (${p.id}) x ${q} = ${inr(t)}`;
+  });
+  const msg = `Hello Kara Embroidery House, I'd like to order:\n\n${lines.join("\n")}\n\nTotal: ${inr(total)}${DISCOUNT > 0 ? ` (after ${DISCOUNT}% off)` : ""}\n\nName:\nDelivery address:\nPin code:`;
+  window.open(`https://wa.me/${WHATSAPP}?text=${encodeURIComponent(msg)}`, "_blank", "noopener");
+});
+$("#openCart").addEventListener("click", () => { renderCart(); openPanel($("#drawer")); });
+
+let tt;
+function toast(t) { const el = $("#toast"); el.textContent = t; el.classList.add("on"); clearTimeout(tt); tt = setTimeout(() => el.classList.remove("on"), 1800); }
+
+renderTabs(); renderGrid(); renderCart();
+</script>
+</body>
+</html>
