@@ -47,11 +47,11 @@
   @media (min-width:1100px){ .grid{ grid-template-columns:repeat(4,minmax(0,1fr)); } }
   .card{ display:flex; flex-direction:column; gap:10px; background:none; border:0; padding:0; text-align:left; }
   .frame{ position:relative; aspect-ratio:4/5; overflow:hidden; background:var(--velvet-2); border:1px solid var(--line); }
-  .frame img{ width:100%; height:100%; object-fit:cover; object-position:center 25%; }
+  .frame img{ position:relative; z-index:1; width:100%; height:100%; object-fit:cover; object-position:center 25%; }
   .ph{ position:absolute; inset:0; display:flex; align-items:center; justify-content:center; padding:14px; text-align:center;
        font-family:'Playfair Display',serif; font-style:italic; color:rgba(200,150,74,.55); font-size:15px;
        background:repeating-linear-gradient(135deg, rgba(200,150,74,.05) 0 2px, transparent 2px 12px); }
-  .badge{ position:absolute; top:10px; left:10px; background:var(--cream); color:var(--velvet); font-size:11px; font-weight:600; padding:4px 8px; }
+  .badge{ position:absolute; z-index:2; top:10px; left:10px; background:var(--cream); color:var(--velvet); font-size:11px; font-weight:600; padding:4px 8px; }
   .name{ font-family:'Playfair Display',serif; font-size:clamp(15px,1.6vw,18px); line-height:1.3; }
   .prices{ display:flex; flex-wrap:wrap; align-items:baseline; gap:4px 8px; font-size:14px; }
   .now{ color:var(--thread-soft); font-weight:600; font-size:15px; }
@@ -93,6 +93,10 @@
   .swatch[aria-pressed="true"]{ border-color:var(--thread); color:var(--cream); background:rgba(200,150,74,.12); }
   .desc ul{ margin:10px 0 0; padding-left:18px; }
   .desc li{ margin:4px 0; }
+  .stitch{ display:flex; gap:12px; align-items:flex-start; margin-top:18px; padding:12px 14px; border:1px solid var(--line); cursor:pointer; }
+  .stitch input{ margin-top:3px; width:18px; height:18px; accent-color:var(--thread); flex:0 0 auto; }
+  .stitch strong{ font-weight:500; }
+  .stitch small{ display:block; color:var(--muted); font-size:12px; line-height:1.5; margin-top:3px; }
   .qty{ display:inline-flex; align-items:center; border:1px solid var(--line); }
   .qty button{ background:none; border:0; width:40px; height:40px; font-size:18px; }
   .qty span{ min-width:34px; text-align:center; }
@@ -165,7 +169,7 @@
    ---------------------------------------------------------------------
    One block per product. Copy a block to add a new one.
    - id:        short unique code, no spaces (e.g. "suit-07")
-   - category:  "bedding" or "suits"
+   - category:  "bedding" or "suits" (suits are shown as unstitched)
    - name:      what customers see
    - price:     the REAL full price in rupees, numbers only (no commas)
    - image:     photo path, e.g. "assets/shop/suit-07.jpg"
@@ -174,6 +178,11 @@
    - colours:   OPTIONAL. For one design in several colours, list each
                 colour with its own photo instead of using image:
                 colours:[ { name:"Mustard", image:"assets/shop/suit-03.jpg" }, ... ]
+   - stitching: OPTIONAL. All suits already offer stitching with the price
+                confirmed on WhatsApp. To show a fixed stitching price for
+                one design instead, put a number (e.g. stitching:850).
+                stitching:false hides the option for that product.
+   - stitchingTime: OPTIONAL. e.g. "7–10 days". Leave "" if it varies.
    - details:   can be several lines inside `backticks`. The first line
                 shows as an intro, every line after it as a bullet point.
    Any discount is worked out automatically from DISCOUNT below.
@@ -192,6 +201,7 @@ Opara silk bottom – 2.5 m
 Chiffon dupatta with lace – 2.5 m
 Elegant mirror work and cut dana work
 Perfect for festive occasions, parties and weddings`,
+    stitching:null, stitchingTime:"",   // null = price confirmed on WhatsApp
     bestseller:false },
   { id:"suit-05", category:"suits", name:"Mustard woven suit with embellished neckline", price:4499, image:"assets/shop/suit-05.jpg", details:"", bestseller:false },  // DUMMY PRICE
   { id:"suit-06", category:"suits", name:"Pink leheriya suit", price:2999, image:"assets/shop/suit-06.jpg", details:"", bestseller:false },  // DUMMY PRICE
@@ -225,7 +235,7 @@ Perfect for festive occasions, parties and weddings`,
 const CATEGORIES = [
   { key:"all",     label:"All" },
   { key:"bedding", label:"Bed cover & comforter sets" },
-  { key:"suits",   label:"Suits" },
+  { key:"suits",   label:"Unstitched suits", tag:"Unstitched", stitching:true },  // stitching:true = every suit offers stitching, price confirmed on WhatsApp
 ];
 
 const DISCOUNT = 0;                  // % off for every product. 0 = no discount shown. Change to 10 or 15 later.
@@ -238,17 +248,24 @@ const inr = (n) => "₹" + Math.round(n).toLocaleString("en-IN");
 const salePrice = (p) => Math.round(p.price * (100 - DISCOUNT) / 100);
 PRODUCTS.forEach(p => { if (p.colours && p.colours.length && !p.image) p.image = p.colours[0].image; });
 const byId = Object.fromEntries(PRODUCTS.map(p => [p.id, p]));
-const splitKey = (k) => { const i = k.indexOf("|"); return i < 0 ? [k, ""] : [k.slice(0, i), k.slice(i + 1)]; };
+const splitKey = (k) => { const [id, colour = "", st = ""] = k.split("|"); return [id, colour, st === "s"]; };
+const makeKey = (id, colour, st) => st ? `${id}|${colour}|s` : (colour ? `${id}|${colour}` : id);
+const stitchMode = (p) => p.stitching ?? (CATEGORIES.find(c => c.key === p.category) || {}).stitching ?? false;
+const stitchPrice = (p) => typeof stitchMode(p) === "number" ? stitchMode(p) : 0;
+const hasStitching = (p) => stitchMode(p) === true || stitchPrice(p) > 0;
+const stitchToConfirm = (p) => hasStitching(p) && !stitchPrice(p);
+const unitPrice = (p, st) => salePrice(p) + (st ? stitchPrice(p) : 0);
 const colourOf = (p, name) => (p.colours || []).find(c => c.name === name);
 const lineImage = (p, colour) => (colourOf(p, colour) || {}).image || p.image;
-const lineName = (p, colour) => colour ? `${p.name} – ${colour}` : p.name;
+const tagOf = (p) => (CATEGORIES.find(c => c.key === p.category) || {}).tag || "";
+const lineName = (p, colour, st) => `${p.name}${tagOf(p) && !st ? ` (${tagOf(p).toLowerCase()})` : ""}${colour ? ` – ${colour}` : ""}${st ? (stitchToConfirm(p) ? " + stitching (price to confirm)" : " + stitching") : ""}`;
 const esc = (t) => String(t).replace(/[&<>"']/g, c => ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[c]));
 
 let cart = {};
 try { cart = JSON.parse(localStorage.getItem("kara-cart") || "{}") || {}; } catch (e) { cart = {}; }
 Object.keys(cart).forEach(k => {
-  const [id, colour] = splitKey(k), p = byId[id];
-  if (!p || (p.colours ? !colourOf(p, colour) : colour)) delete cart[k];
+  const [id, colour, st] = splitKey(k), p = byId[id];
+  if (!p || (p.colours ? !colourOf(p, colour) : colour) || (st && !hasStitching(p))) delete cart[k];
 });
 const saveCart = () => { try { localStorage.setItem("kara-cart", JSON.stringify(cart)); } catch (e) {} };
 
@@ -277,7 +294,7 @@ function renderGrid() {
       ${frame(p)}
       <div class="name">${esc(p.name)}</div>
       ${priceHTML(p)}
-      <div class="ship">${p.colours ? `${p.colours.length} colours · ` : ""}${SHIPS}</div>
+      <div class="ship">${[tagOf(p), p.colours ? `${p.colours.length} colours` : "", SHIPS].filter(Boolean).join(" · ")}</div>
     </button>`).join("") : `<p class="empty">New pieces are coming to this section soon.</p>`;
 }
 $("#tabs").addEventListener("click", (e) => {
@@ -311,10 +328,13 @@ function detailsHTML(t) {
 }
 
 /* product sheet */
-let sheetQty = 1, sheetId = null, sheetColour = "";
+let sheetQty = 1, sheetId = null, sheetColour = "", sheetStitch = false;
+const shipText = (p, st) => st
+  ? ["Stitched to your measurements", p.stitchingTime ? `Ready in ${p.stitchingTime}` : (stitchToConfirm(p) ? "Price and time confirmed on WhatsApp" : "Time confirmed on WhatsApp")].join(" · ")
+  : [tagOf(p), SHIPS].filter(Boolean).join(" · ");
 function openProduct(id) {
   const p = byId[id]; if (!p) return;
-  sheetId = id; sheetQty = 1; sheetColour = p.colours ? p.colours[0].name : "";
+  sheetId = id; sheetQty = 1; sheetStitch = false; sheetColour = p.colours ? p.colours[0].name : "";
   $("#sheetTitle").textContent = CATEGORIES.find(c => c.key === p.category)?.label || "Product";
   $("#sheetBody").innerHTML = `
     <div class="detail">
@@ -322,10 +342,15 @@ function openProduct(id) {
       <div>
         <h3>${esc(p.name)}</h3>
         ${priceHTML(p)}
-        <div class="ship">${SHIPS}</div>
+        <div class="ship" id="shipLine">${shipText(p, false)}</div>
         ${p.colours ? `<div class="swatch-label">Colour: <strong id="colourName">${esc(sheetColour)}</strong></div>
         <div class="swatches" role="group" aria-label="Colour">${p.colours.map(c =>
           `<button class="swatch" data-colour="${esc(c.name)}" aria-pressed="${c.name === sheetColour}">${esc(c.name)}</button>`).join("")}</div>` : ""}
+        ${hasStitching(p) ? `<label class="stitch"><input type="checkbox" id="stitchBox">
+          <span><strong>Add stitching${stitchPrice(p) ? ` (+${inr(stitchPrice(p))})` : ""}</strong>
+          <small>${stitchPrice(p)
+            ? `Made to your measurements, which we'll take on WhatsApp after you order.${p.stitchingTime ? ` Ready in ${esc(p.stitchingTime)}.` : " Stitching time depends on the design."}`
+            : "Stitching price and time depend on the design. We'll confirm both and take your measurements on WhatsApp."}</small></span></label>` : ""}
         ${detailsHTML(p.details)}
         <div class="row">
           <div class="qty" aria-label="Quantity">
@@ -338,6 +363,11 @@ function openProduct(id) {
   openPanel($("#sheet"));
 }
 $("#grid").addEventListener("click", (e) => { const c = e.target.closest("[data-open]"); if (c) openProduct(c.dataset.open); });
+$("#sheetBody").addEventListener("change", (e) => {
+  if (e.target.id !== "stitchBox") return;
+  sheetStitch = e.target.checked;
+  $("#shipLine").textContent = shipText(byId[sheetId], sheetStitch);
+});
 $("#sheetBody").addEventListener("click", (e) => {
   const sw = e.target.closest("[data-colour]");
   if (sw) {
@@ -350,7 +380,7 @@ $("#sheetBody").addEventListener("click", (e) => {
   const q = e.target.closest("[data-sq]");
   if (q) { sheetQty = Math.max(1, Math.min(20, sheetQty + Number(q.dataset.sq))); $("#sq").textContent = sheetQty; return; }
   if (e.target.id === "addBtn") {
-    const key = sheetColour ? `${sheetId}|${sheetColour}` : sheetId;
+    const key = makeKey(sheetId, sheetColour, sheetStitch);
     cart[key] = Math.min(20, (cart[key] || 0) + sheetQty);
     saveCart(); renderCart(); closePanels();
     toast("Added to cart");
@@ -367,22 +397,24 @@ function renderCart() {
     $("#cartTotals").innerHTML = "";
     return;
   }
-  let total = 0, full = 0;
+  let total = 0, full = 0, pending = false;
   $("#cartBody").innerHTML = ids.map(id => {
-    const [pid, colour] = splitKey(id), p = byId[pid], q = cart[id];
-    total += salePrice(p) * q; full += p.price * q;
+    const [pid, colour, st] = splitKey(id), p = byId[pid], q = cart[id];
+    total += unitPrice(p, st) * q; full += (p.price + (st ? stitchPrice(p) : 0)) * q;
+    if (st && stitchToConfirm(p)) pending = true;
     return `<div class="line">
       ${frame(p, lineImage(p, colour))}
       <div>
-        <div class="line-name">${esc(lineName(p, colour))}</div>
+        <div class="line-name">${esc(lineName(p, colour, st))}</div>
         <div class="qty"><button data-cq="-1" data-id="${esc(id)}" aria-label="Less">−</button><span>${q}</span><button data-cq="1" data-id="${esc(id)}" aria-label="More">+</button></div>
         <div><button class="remove" data-rm="${esc(id)}">Remove</button></div>
       </div>
-      <div class="line-price"><div class="now">${inr(salePrice(p) * q)}</div>${DISCOUNT > 0 ? `<div class="was">${inr(p.price * q)}</div>` : ""}</div>
+      <div class="line-price"><div class="now">${inr(unitPrice(p, st) * q)}</div>${DISCOUNT > 0 ? `<div class="was">${inr((p.price + (st ? stitchPrice(p) : 0)) * q)}</div>` : ""}</div>
     </div>`;
   }).join("");
   $("#cartTotals").innerHTML = `
-    <div class="total-row"><span>Total</span><strong>${inr(total)}</strong></div>
+    <div class="total-row"><span>Total</span><strong>${inr(total)}${pending ? " + stitching" : ""}</strong></div>
+    ${pending ? `<p class="note">Stitching charges depend on the design. We'll confirm them on WhatsApp.</p>` : ""}
     ${DISCOUNT > 0 ? `<div class="saved">You save ${inr(full - total)} (${DISCOUNT}% off)</div>` : ""}
     <button class="wa" id="orderWa">
       <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2zm0 18.2a8.2 8.2 0 0 1-4.2-1.2l-.3-.2-3 .8.8-2.9-.2-.3A8.2 8.2 0 1 1 12 20.2zm4.5-6.1c-.2-.1-1.5-.7-1.7-.8-.2-.1-.4-.1-.6.1l-.8 1c-.1.2-.3.2-.5.1a6.7 6.7 0 0 1-3.3-2.9c-.2-.4.2-.4.7-1.3.1-.2 0-.3 0-.4l-.8-1.8c-.2-.5-.4-.4-.6-.4h-.5a1 1 0 0 0-.7.3 3 3 0 0 0-.9 2.2 5.2 5.2 0 0 0 1.1 2.8 11.9 11.9 0 0 0 4.6 4c1.7.7 2.4.8 3.2.7.5-.1 1.5-.6 1.7-1.2.2-.6.2-1.1.2-1.2-.1-.1-.3-.2-.5-.3z"/></svg>
@@ -399,12 +431,13 @@ $("#cartBody").addEventListener("click", (e) => {
 });
 $("#cartTotals").addEventListener("click", (e) => {
   if (!e.target.closest("#orderWa")) return;
-  let total = 0;
+  let total = 0, anyStitch = false, pending = false;
   const lines = Object.keys(cart).map((id, i) => {
-    const [pid, colour] = splitKey(id), p = byId[pid], q = cart[id], t = salePrice(p) * q; total += t;
-    return `${i + 1}. ${lineName(p, colour)} (${p.id}) x ${q} = ${inr(t)}`;
+    const [pid, colour, st] = splitKey(id), p = byId[pid], q = cart[id], t = unitPrice(p, st) * q; total += t;
+    if (st) { anyStitch = true; if (stitchToConfirm(p)) pending = true; }
+    return `${i + 1}. ${lineName(p, colour, st)} (${p.id}) x ${q} = ${inr(t)}`;
   });
-  const msg = `Hello Kara Embroidery House, I'd like to order:\n\n${lines.join("\n")}\n\nTotal: ${inr(total)}${DISCOUNT > 0 ? ` (after ${DISCOUNT}% off)` : ""}\n\nName:\nDelivery address:\nPin code:`;
+  const msg = `Hello Kara Embroidery House, I'd like to order:\n\n${lines.join("\n")}\n\nTotal: ${inr(total)}${DISCOUNT > 0 ? ` (after ${DISCOUNT}% off)` : ""}${pending ? " + stitching charges" : ""}${anyStitch ? (pending ? "\n\nStitching: please confirm the stitching price and time, and guide me on the measurements you need." : "\n\nStitching: please guide me on the measurements you need.") : ""}\n\nName:\nDelivery address:\nPin code:`;
   window.open(`https://wa.me/${WHATSAPP}?text=${encodeURIComponent(msg)}`, "_blank", "noopener");
 });
 $("#openCart").addEventListener("click", () => { renderCart(); openPanel($("#drawer")); });
